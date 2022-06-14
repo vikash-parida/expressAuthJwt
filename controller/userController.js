@@ -49,7 +49,8 @@ exports.UserLogin = async function(req, res){
       if(user != null){
        const isMatch = await bcrypt.compare(password, user.password)
        if(user.email === email && isMatch){
-       res.status(200).send({"status":"susseccfull", "message":"login successfull"})
+        const token = jwt.sign({user_id:user.id},process.env.JWT_SECRET_KEY,{expiresIn:'24h'})
+       res.status(200).send({"status":"susseccfull", "message":"login successfull","token":token})
        }else{
         res.status(404).send({"status":"failed", "message":"user email or password are not valid"})
        }
@@ -62,4 +63,23 @@ exports.UserLogin = async function(req, res){
   } catch (error) {
     res.send({"status":"error","message":"enable to login"});
   }
+}
+
+exports.changeUserPassword = async function(req, res) {
+  try {
+    const {password,password_confirmation} = req.body;
+    if(password&& password_confirmation){
+      if(password != password_confirmation){
+        res.status(404).send({"status":"new password and new confirmation password is not the match"});
+      }else{
+        const salt = await bcrypt.genSalt(10);
+        const hashpassword = await bcrypt.hash(password, salt);
+        res.send({"status":"successfull", "message":"changepassword"})
+      }
+    }else{
+      res.send({"status":"failed", "message":"All failed are required"})
+    }
+} catch (error) {
+  
+}
 }
